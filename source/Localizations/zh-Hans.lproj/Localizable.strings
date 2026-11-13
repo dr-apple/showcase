@@ -67,6 +67,8 @@
 "Sound" = "声音";
 "Display" = "显示";
 "Resolution" = "分辨率";
+"Head-Up Display" = "抬头显示";
+"CarPlay Size" = "CarPlay 大小";
 "Language" = "语言";
 "Troubleshooting" = "故障排除";
 "Anonymous Usage" = "匿名使用数据";
@@ -93,8 +95,7 @@
 "Play Sound on This %@" = "在这台 %@ 上播放声音";
 "%u × %u at %u fps" = "%u × %u，%u 帧/秒";
 "Dock on the Right" = "程序坞在右侧";
-"Mirror Horizontally" = "水平镜像";
-"Mirror Vertically" = "垂直镜像";
+"Automatic" = "自动";
 "Prioritize Quality" = "画质优先";
 "Prioritize Performance" = "性能优先";
 "Frame Rate" = "帧率";
@@ -108,6 +109,16 @@
 "Package" = "软件包";
 "Country" = "国家/地区";
 "View Source" = "查看源代码";
+"Mirror Horizontally" = "水平镜像";
+"Mirror Vertically" = "垂直镜像";
+"Picture Size" = "画面大小";
+"Horizontal Position" = "水平位置";
+"Left" = "左";
+"Center" = "居中";
+"Right" = "右";
+"Vertical Position" = "垂直位置";
+"Top" = "顶部";
+"Bottom" = "底部";
 "Default" = "默认";
 "Device Language" = "设备语言";
 "Detailed Logging" = "详细日志";

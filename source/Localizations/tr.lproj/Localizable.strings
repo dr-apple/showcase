@@ -67,6 +67,8 @@
 "Sound" = "Ses";
 "Display" = "Ekran";
 "Resolution" = "Çözünürlük";
+"Head-Up Display" = "Head-Up Ekran";
+"CarPlay Size" = "CarPlay Boyutu";
 "Language" = "Dil";
 "Troubleshooting" = "Sorun Giderme";
 "Anonymous Usage" = "Anonim Kullanım";
@@ -93,8 +95,7 @@
 "Play Sound on This %@" = "Sesi Bu %@ Üzerinde Çal";
 "%u × %u at %u fps" = "%u × %u, %u fps";
 "Dock on the Right" = "Dock Sağda";
-"Mirror Horizontally" = "Yatay Aynala";
-"Mirror Vertically" = "Dikey Aynala";
+"Automatic" = "Otomatik";
 "Prioritize Quality" = "Kaliteye Öncelik Ver";
 "Prioritize Performance" = "Performansa Öncelik Ver";
 "Frame Rate" = "Kare Hızı";
@@ -108,6 +109,16 @@
 "Package" = "Paket";
 "Country" = "Ülke";
 "View Source" = "Kaynak Kodunu Görüntüle";
+"Mirror Horizontally" = "Yatay Aynala";
+"Mirror Vertically" = "Dikey Aynala";
+"Picture Size" = "Görüntü Boyutu";
+"Horizontal Position" = "Yatay Konum";
+"Left" = "Sol";
+"Center" = "Orta";
+"Right" = "Sağ";
+"Vertical Position" = "Dikey Konum";
+"Top" = "Üst";
+"Bottom" = "Alt";
 "Default" = "Varsayılan";
 "Device Language" = "Aygıt Dili";
 "Detailed Logging" = "Ayrıntılı Günlük Kaydı";

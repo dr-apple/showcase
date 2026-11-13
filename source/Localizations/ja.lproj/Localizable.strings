@@ -67,6 +67,8 @@
 "Sound" = "サウンド";
 "Display" = "ディスプレイ";
 "Resolution" = "解像度";
+"Head-Up Display" = "ヘッドアップディスプレイ";
+"CarPlay Size" = "CarPlayのサイズ";
 "Language" = "言語";
 "Troubleshooting" = "トラブルシューティング";
 "Anonymous Usage" = "匿名の使用状況";
@@ -93,8 +95,7 @@
 "Play Sound on This %@" = "この%@でサウンドを再生";
 "%u × %u at %u fps" = "%u × %u、%u fps";
 "Dock on the Right" = "Dockを右側に表示";
-"Mirror Horizontally" = "左右反転";
-"Mirror Vertically" = "上下反転";
+"Automatic" = "自動";
 "Prioritize Quality" = "画質を優先";
 "Prioritize Performance" = "パフォーマンスを優先";
 "Frame Rate" = "フレームレート";
@@ -108,6 +109,16 @@
 "Package" = "パッケージ";
 "Country" = "国または地域";
 "View Source" = "ソースコードを見る";
+"Mirror Horizontally" = "左右反転";
+"Mirror Vertically" = "上下反転";
+"Picture Size" = "画面サイズ";
+"Horizontal Position" = "水平方向の位置";
+"Left" = "左";
+"Center" = "中央";
+"Right" = "右";
+"Vertical Position" = "垂直方向の位置";
+"Top" = "上";
+"Bottom" = "下";
 "Default" = "デフォルト";
 "Device Language" = "デバイスの言語";
 "Detailed Logging" = "詳細なログ";

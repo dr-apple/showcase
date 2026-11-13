@@ -133,6 +133,12 @@ static NSString *L(NSString *english) {
 /* Mirrored video for a head-up display reflected in the windshield. */
 #define MIRROR_HORIZONTAL_KEY   @"mirrorVideoHorizontally"
 #define MIRROR_VERTICAL_KEY     @"mirrorVideoVertically"
+/* Picture size in percent (0 = 100) and position (-1, 0, 1) on the screen. */
+#define HUD_SCALE_KEY           @"hudPictureScale"
+#define HUD_HORIZONTAL_KEY      @"hudPictureHorizontal"
+#define HUD_VERTICAL_KEY        @"hudPictureVertical"
+/* CarPlay interface size in percent (0 = let the iPhone decide). */
+#define CARPLAY_UI_SCALE_KEY    @"carplayInterfaceScale"
 #define SMOOTH_VIDEO_KEY        @"preferSmoothVideo"
 #define QUALITY_VIDEO_KEY       @"prioritizeVideoQuality"
 #define VIDEO_WIDTH_KEY         @"videoWidth"
@@ -2103,12 +2109,33 @@ static NSString *validateSSID(NSString *ssid) {
 + (Class)layerClass { return [AVSampleBufferDisplayLayer class]; }
 @end
 
-/* Both switches on turn the picture 180 degrees. Touches follow the mirrored
- * picture because mapTouch reads locations in the video view's own space. */
-static CGAffineTransform video_mirror_transform(void) {
+static NSInteger hud_picture_scale(void) {
+    NSInteger scale = [[NSUserDefaults standardUserDefaults] integerForKey:HUD_SCALE_KEY];
+    return scale >= 40 && scale <= 100 ? scale : 100;
+}
+
+static NSInteger hud_position(NSString *key) {
+    NSInteger value = [[NSUserDefaults standardUserDefaults] integerForKey:key];
+    return value < 0 ? -1 : (value > 0 ? 1 : 0);
+}
+
+static BOOL hud_active(void) {
     NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
-    return CGAffineTransformMakeScale([d boolForKey:MIRROR_HORIZONTAL_KEY] ? -1 : 1,
-                                      [d boolForKey:MIRROR_VERTICAL_KEY] ? -1 : 1);
+    return [d boolForKey:MIRROR_HORIZONTAL_KEY] || [d boolForKey:MIRROR_VERTICAL_KEY]
+        || hud_picture_scale() < 100;
+}
+
+/* Mirrors, shrinks and moves the picture for a head-up display. Both mirror
+ * switches on turn it 180 degrees. A smaller picture moves to the chosen edge
+ * and the rest of the screen stays black. Touches follow the picture because
+ * mapTouch reads locations in the video view's own space. */
+static CGAffineTransform video_mirror_transform(CGSize size) {
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    CGFloat s = hud_picture_scale() / 100.0;
+    CGFloat dx = (1 - s) / 2 * size.width * hud_position(HUD_HORIZONTAL_KEY);
+    CGFloat dy = (1 - s) / 2 * size.height * hud_position(HUD_VERTICAL_KEY);
+    return CGAffineTransformMake([d boolForKey:MIRROR_HORIZONTAL_KEY] ? -s : s, 0, 0,
+                                 [d boolForKey:MIRROR_VERTICAL_KEY] ? -s : s, dx, dy);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3995,7 +4022,7 @@ static pid_t reusable_baa_broker(void) {
                 self.vc.fullscreenMode = YES;
                 [self.vc.view setNeedsLayout];
             }
-            self.videoView.transform = video_mirror_transform();
+            self.videoView.transform = video_mirror_transform(self.videoView.bounds.size);
             self.chromeVisible = NO;
             self.controlsOverlay.hidden = YES;
             self.controlsOverlay.alpha = 1;
@@ -4638,7 +4665,7 @@ static pid_t reusable_baa_broker(void) {
     if (![self startIPCListener]) { [self failWith:@"IPC listener failed"]; return; }
 
     char nameBuf[64];
-    char widthBuf[16], heightBuf[16], fpsBuf[16], receiveBufferBuf[16];
+    char widthBuf[16], heightBuf[16], fpsBuf[16], receiveBufferBuf[16], uiScaleBuf[16];
     CarPlayVideoPriority priority = carplay_video_priority();
     BOOL receiverAudio = [[NSUserDefaults standardUserDefaults]
         boolForKey:RECEIVER_AUDIO_KEY];
@@ -4677,6 +4704,8 @@ static pid_t reusable_baa_broker(void) {
     snprintf(fpsBuf, sizeof(fpsBuf), "%u", display.framesPerSecond);
     snprintf(receiveBufferBuf, sizeof(receiveBufferBuf), "%d",
              screenReceiveBuffer);
+    NSInteger uiScale = [[NSUserDefaults standardUserDefaults] integerForKey:CARPLAY_UI_SCALE_KEY];
+    snprintf(uiScaleBuf, sizeof(uiScaleBuf), "%ld", (long)uiScale);
     ip_log("display profile: native=%ux%u memory=%lluMB cores=%lu "
            "budget=%llu pixels selected=%ux%u@%u wlan=%s rcvbuf=%d "
            "priority=%s audio=%s dock=%s",
@@ -4699,6 +4728,7 @@ static pid_t reusable_baa_broker(void) {
         (char*)"--fps", fpsBuf,
         (char*)"--screen-rcvbuf", receiveBufferBuf,
         (char*)"--audio", (char*)(receiverAudio ? "receiver" : "sender"),
+        (char*)"--ui-scale", uiScaleBuf,
         rightHandDrive ? (char*)"--right-hand-drive" : NULL,
         NULL
     };
@@ -6441,6 +6471,8 @@ static BOOL g_settings_hardware_loading = NO;
     if ([page isEqualToString:@"sound"]) return L(@"Sound");
     if ([page isEqualToString:@"display"]) return L(@"Display");
     if ([page isEqualToString:@"resolution"]) return L(@"Resolution");
+    if ([page isEqualToString:@"hud"]) return L(@"Head-Up Display");
+    if ([page isEqualToString:@"carplaysize"]) return L(@"CarPlay Size");
     if ([page isEqualToString:@"language"]) return L(@"Language");
     if ([page isEqualToString:@"logs"]) return L(@"Troubleshooting");
     if ([page isEqualToString:@"usage"]) return L(@"Anonymous Usage");
@@ -6632,6 +6664,8 @@ static BOOL g_settings_hardware_loading = NO;
     else if ([page isEqualToString:@"sound"]) [self buildSound:b];
     else if ([page isEqualToString:@"display"]) [self buildDisplay:b];
     else if ([page isEqualToString:@"resolution"]) [self buildResolution:b];
+    else if ([page isEqualToString:@"hud"]) [self buildHUD:b];
+    else if ([page isEqualToString:@"carplaysize"]) [self buildCarPlaySize:b];
     else if ([page isEqualToString:@"language"]) [self buildLanguage:b];
     else if ([page isEqualToString:@"logs"]) [self buildLogs:b];
     else if ([page isEqualToString:@"usage"]) [self buildUsage:b];
@@ -7203,14 +7237,12 @@ static BOOL g_settings_hardware_loading = NO;
         [card addRow:dock height:dock.bounds.size.height];
     }];
     [b card:^(SettingsCard *card) {
-        UIView *horizontal = [self switchRow:L(@"Mirror Horizontally") subtitle:nil
-            on:[d boolForKey:MIRROR_HORIZONTAL_KEY] width:w
-            changed:^(BOOL on) { setter(MIRROR_HORIZONTAL_KEY, on); }];
-        [card addRow:horizontal height:horizontal.bounds.size.height];
-        UIView *vertical = [self switchRow:L(@"Mirror Vertically") subtitle:nil
-            on:[d boolForKey:MIRROR_VERTICAL_KEY] width:w
-            changed:^(BOOL on) { setter(MIRROR_VERTICAL_KEY, on); }];
-        [card addRow:vertical height:vertical.bounds.size.height];
+        [card addRow:[self navRow:L(@"Head-Up Display") value:hud_active() ? L(@"On") : L(@"Off")
+            width:w selected:NO action:^{ [weakSelf push:@"hud"]; }] height:52];
+        NSInteger uiScale = [d integerForKey:CARPLAY_UI_SCALE_KEY];
+        [card addRow:[self navRow:L(@"CarPlay Size")
+            value:uiScale ? [NSString stringWithFormat:@"%ld %%", (long)uiScale] : L(@"Automatic")
+            width:w selected:NO action:^{ [weakSelf push:@"carplaysize"]; }] height:52];
     }];
     [b card:^(SettingsCard *card) {
         UIView *quality = [self switchRow:L(@"Prioritize Quality") subtitle:nil
@@ -7307,6 +7339,75 @@ static BOOL g_settings_hardware_loading = NO;
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:
                 GITHUB_URL @"/blob/main/telemetry/worker.js"] options:@{} completionHandler:nil];
         }] height:52];
+    }];
+}
+
+- (void)buildHUD:(SettingsPageBuilder *)b {
+    CGFloat w = b.width;
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    void (^setBool)(NSString *, BOOL) = ^(NSString *key, BOOL on) {
+        [[NSUserDefaults standardUserDefaults] setBool:on forKey:key];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        ip_log("settings: %s=%d", key.UTF8String, on ? 1 : 0);
+    };
+    void (^setInt)(NSString *, NSInteger) = ^(NSString *key, NSInteger value) {
+        [[NSUserDefaults standardUserDefaults] setInteger:value forKey:key];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        ip_log("settings: %s=%ld", key.UTF8String, (long)value);
+    };
+    [b card:^(SettingsCard *card) {
+        UIView *horizontal = [self switchRow:L(@"Mirror Horizontally") subtitle:nil
+            on:[d boolForKey:MIRROR_HORIZONTAL_KEY] width:w
+            changed:^(BOOL on) { setBool(MIRROR_HORIZONTAL_KEY, on); }];
+        [card addRow:horizontal height:horizontal.bounds.size.height];
+        UIView *vertical = [self switchRow:L(@"Mirror Vertically") subtitle:nil
+            on:[d boolForKey:MIRROR_VERTICAL_KEY] width:w
+            changed:^(BOOL on) { setBool(MIRROR_VERTICAL_KEY, on); }];
+        [card addRow:vertical height:vertical.bounds.size.height];
+    }];
+    NSArray<NSNumber *> *scales = @[@100, @90, @80, @70, @60, @50];
+    NSMutableArray<NSString *> *scaleItems = [NSMutableArray array];
+    for (NSNumber *scale in scales) [scaleItems addObject:[NSString stringWithFormat:@"%@ %%", scale]];
+    NSUInteger scaleIndex = [scales indexOfObject:@(hud_picture_scale())];
+    [b card:^(SettingsCard *card) {
+        UIView *size = [self segmentRow:L(@"Picture Size") items:scaleItems
+            selected:scaleIndex == NSNotFound ? 0 : (NSInteger)scaleIndex width:w enabled:YES
+            changed:^(NSInteger index) { setInt(HUD_SCALE_KEY, scales[index].integerValue); }];
+        [card addRow:size height:52];
+        UIView *horizontal = [self segmentRow:L(@"Horizontal Position")
+            items:@[L(@"Left"), L(@"Center"), L(@"Right")]
+            selected:hud_position(HUD_HORIZONTAL_KEY) + 1 width:w enabled:YES
+            changed:^(NSInteger index) { setInt(HUD_HORIZONTAL_KEY, index - 1); }];
+        [card addRow:horizontal height:52];
+        UIView *vertical = [self segmentRow:L(@"Vertical Position")
+            items:@[L(@"Top"), L(@"Center"), L(@"Bottom")]
+            selected:hud_position(HUD_VERTICAL_KEY) + 1 width:w enabled:YES
+            changed:^(NSInteger index) { setInt(HUD_VERTICAL_KEY, index - 1); }];
+        [card addRow:vertical height:52];
+    }];
+}
+
+/* Tells the iPhone a physical screen size for the chosen density. A lower
+ * percentage claims a larger screen, which should make CarPlay draw smaller
+ * controls. Takes effect on the next CarPlay connection. */
+- (void)buildCarPlaySize:(SettingsPageBuilder *)b {
+    CGFloat w = b.width;
+    __weak SettingsViewController *weakSelf = self;
+    NSInteger current = [[NSUserDefaults standardUserDefaults] integerForKey:CARPLAY_UI_SCALE_KEY];
+    NSArray<NSNumber *> *values = @[@0, @120, @110, @100, @90, @80, @70, @60, @50];
+    [b card:^(SettingsCard *card) {
+        for (NSNumber *value in values) {
+            NSInteger v = value.integerValue;
+            NSString *title = v ? [NSString stringWithFormat:@"%ld %%", (long)v] : L(@"Automatic");
+            [card addRow:[self choiceRow:title value:@"" checked:current == v width:w action:^{
+                NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+                if (v) [d setInteger:v forKey:CARPLAY_UI_SCALE_KEY];
+                else [d removeObjectForKey:CARPLAY_UI_SCALE_KEY];
+                [d synchronize];
+                ip_log("settings: carplay ui scale=%ld", (long)v);
+                [weakSelf pop];
+            }] height:52];
+        }
     }];
 }
 

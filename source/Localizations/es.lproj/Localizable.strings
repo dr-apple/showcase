@@ -67,6 +67,8 @@
 "Sound" = "Sonido";
 "Display" = "Pantalla";
 "Resolution" = "Resolución";
+"Head-Up Display" = "Pantalla de visualización frontal";
+"CarPlay Size" = "Tamaño de CarPlay";
 "Language" = "Idioma";
 "Troubleshooting" = "Solución de problemas";
 "Anonymous Usage" = "Uso anónimo";
@@ -93,8 +95,7 @@
 "Play Sound on This %@" = "Reproducir el sonido en este %@";
 "%u × %u at %u fps" = "%u × %u a %u fps";
 "Dock on the Right" = "Dock a la derecha";
-"Mirror Horizontally" = "Reflejar horizontalmente";
-"Mirror Vertically" = "Reflejar verticalmente";
+"Automatic" = "Automático";
 "Prioritize Quality" = "Priorizar la calidad";
 "Prioritize Performance" = "Priorizar el rendimiento";
 "Frame Rate" = "Frecuencia de fotogramas";
@@ -108,6 +109,16 @@
 "Package" = "Paquete";
 "Country" = "País";
 "View Source" = "Ver código fuente";
+"Mirror Horizontally" = "Reflejar horizontalmente";
+"Mirror Vertically" = "Reflejar verticalmente";
+"Picture Size" = "Tamaño de la imagen";
+"Horizontal Position" = "Posición horizontal";
+"Left" = "Izquierda";
+"Center" = "Centro";
+"Right" = "Derecha";
+"Vertical Position" = "Posición vertical";
+"Top" = "Arriba";
+"Bottom" = "Abajo";
 "Default" = "Predeterminada";
 "Device Language" = "Idioma del dispositivo";
 "Detailed Logging" = "Registro detallado";
