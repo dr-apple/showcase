@@ -93,6 +93,8 @@
 "Play Sound on This %@" = "Ton auf diesem %@ wiedergeben";
 "%u × %u at %u fps" = "%u × %u mit %u fps";
 "Dock on the Right" = "Dock rechts";
+"Mirror Horizontally" = "Horizontal spiegeln";
+"Mirror Vertically" = "Vertikal spiegeln";
 "Prioritize Quality" = "Qualität bevorzugen";
 "Prioritize Performance" = "Leistung bevorzugen";
 "Frame Rate" = "Bildrate";
